@@ -1,7 +1,11 @@
-import { getClientSideURL } from '@/utilities/getURL'
-
 /**
- * Processes media resource URL to ensure proper formatting
+ * Processes media resource URL to ensure proper formatting.
+ *
+ * Relative URLs (e.g. `/api/media/file/image.webp`) are kept as-is so that
+ * Next.js Image can serve them via `localPatterns` without making a loopback
+ * HTTP request to localhost — which Next.js blocks because it resolves to a
+ * private IP. Absolute external URLs (CDN, etc.) are returned unchanged.
+ *
  * @param url The original URL from the resource
  * @param cacheTag Optional cache tag to append to the URL
  * @returns Properly formatted URL with cache tag if provided
@@ -9,16 +13,13 @@ import { getClientSideURL } from '@/utilities/getURL'
 export const getMediaUrl = (url: string | null | undefined, cacheTag?: string | null): string => {
   if (!url) return ''
 
-  if (cacheTag && cacheTag !== '') {
-    cacheTag = encodeURIComponent(cacheTag)
-  }
+  const encodedTag = cacheTag && cacheTag !== '' ? encodeURIComponent(cacheTag) : null
 
-  // Check if URL already has http/https protocol
+  // Absolute external URL — return as-is (CDN, remote storage, etc.)
   if (url.startsWith('http://') || url.startsWith('https://')) {
-    return cacheTag ? `${url}?${cacheTag}` : url
+    return encodedTag ? `${url}?${encodedTag}` : url
   }
 
-  // Otherwise prepend client-side URL
-  const baseUrl = getClientSideURL()
-  return cacheTag ? `${baseUrl}${url}?${cacheTag}` : `${baseUrl}${url}`
+  // Relative path — keep relative so Next.js localPatterns handles it
+  return encodedTag ? `${url}?${encodedTag}` : url
 }

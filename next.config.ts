@@ -24,6 +24,11 @@ const nextConfig: NextConfig = {
         }
       }),
     ],
+    localPatterns: [
+      {
+        pathname: '/api/media/file/**',
+      },
+    ],
   },
   webpack: (webpackConfig) => {
     webpackConfig.resolve.extensionAlias = {
